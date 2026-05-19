@@ -1,0 +1,14 @@
+# Database configuration (contains sensitive passwords)
+config/database.php
+config/ai.php
+uploads/materials/*
+
+# Keep the upload folder structure but ignore the actual files inside
+uploads/materials/*
+
+# OS and IDE specific files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
