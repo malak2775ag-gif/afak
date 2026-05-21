@@ -139,6 +139,66 @@ function getHierarchicalCategories(PDO $pdo): array {
     $build(0, 0);
     return $result;
 }
+
+/**
+ * Uploads a file to Cloudinary (Production) or local storage (Development).
+ * Uses the credentials provided for DAPZYZ2XQ.
+ */
+function afak_upload_file(array $file, string $type = 'general'): ?string {
+    $cloudName = getenv('CLOUD_NAME') ?: 'dapzyz2xq';
+    $apiKey = getenv('API_KEY') ?: '382277631725532';
+    $apiSecret = getenv('API_SECRET') ?: 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
+
+    // Detect environment
+    $isLocal = (strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
+
+    // 1. Production: Upload to Cloudinary
+    if (!$isLocal && $cloudName && $apiKey && $apiSecret) {
+        $url = "https://api.cloudinary.com/v1_1/{$cloudName}/auto/upload";
+        $timestamp = time();
+        $folder = "afak/{$type}";
+        
+        $params = ['folder' => $folder, 'timestamp' => $timestamp];
+        ksort($params);
+        $signStr = "";
+        foreach($params as $k => $v) { $signStr .= "{$k}={$v}&"; }
+        $signature = sha1(rtrim($signStr, "&") . $apiSecret);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'file' => new CURLFile($file['tmp_name']),
+                'api_key' => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+                'folder' => $folder
+            ]
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status === 200) {
+            $data = json_decode($response, true);
+            return $data['secure_url'] ?? null;
+        }
+    }
+
+    // 2. Development/Local: Save to local WAMP folder
+    $subDir = "uploads/{$type}/";
+    $uploadDir = __DIR__ . '/../' . $subDir;
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $newName = uniqid($type . '_', true) . '.' . $ext;
+    if (move_uploaded_file($file['tmp_name'], $uploadDir . $newName)) {
+        return $subDir . $newName;
+    }
+
+    return null;
+}
 /**
  * جلب معايير التقييم (Rubric Criteria) لتقييم معين
  */

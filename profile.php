@@ -34,13 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         
         if (in_array($fileType, $allowedTypes)) {
-            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-            $newFileName = 'avatar_' . $_SESSION['user_id'] . '_' . time() . '.' . $fileExt;
-            $uploadDir = __DIR__ . '/uploads/avatars/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            
-            if (move_uploaded_file($fileTmpPath, $uploadDir . $newFileName)) {
-                $avatarUrl = 'uploads/avatars/' . $newFileName;
+            $uploaded = afak_upload_file($_FILES['avatar'], 'avatars');
+            if ($uploaded) {
+                $avatarUrl = $uploaded;
                 $pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?")->execute([$avatarUrl, $_SESSION['user_id']]);
                 $user['avatar_url'] = $avatarUrl; // Update for current view
             } else {

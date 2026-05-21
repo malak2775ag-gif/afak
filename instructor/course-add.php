@@ -59,23 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Skip further processing of this file if there's an upload error
                 $thumbnail_url = null; 
             } else {
-            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-            $newFileName = uniqid('cover_', true) . '.' . $fileExt;
-            $uploadDir = __DIR__ . '/../uploads/covers/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $destPath = $uploadDir . $newFileName;
-            if (move_uploaded_file($fileTmpPath, $destPath)) {
-                $thumbnail_url = 'uploads/covers/' . $newFileName;
+            $uploaded = afak_upload_file($_FILES['cover'], 'covers');
+            if ($uploaded) {
+                $thumbnail_url = $uploaded;
             } else {
-                $errors[] = 'Failed to save cover image.';
+                $errors[] = 'Failed to upload cover image.';
             }
         }
     }
 
-    if (empty($errors)) {
-        $baseSlug = $slug;
+    if (empt$uploaded = afak_upload_file($_FILES['cover'], 'covers');
+            if ($uploaded) {
+                $thumbnail_url = $uploaded;
+            y($errors)) {
+        $baseSlug = $slug;ve coer image.';
+                $errors[] = 'Faild to upload
         $n = 0;
         do {
             $trySlug = $n === 0 ? $baseSlug : $baseSlug . '-' . $n;

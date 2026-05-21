@@ -72,14 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fileType = $_FILES['thumbnail']['type'];
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (in_array($fileType, $allowedTypes, true)) {
-                $fileExt = pathinfo($_FILES['thumbnail']['name'], PATHINFO_EXTENSION);
-                $newFileName = uniqid('cover_', true) . '.' . $fileExt;
-                $uploadDir = __DIR__ . '/../uploads/covers/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                if (move_uploaded_file($_FILES['thumbnail']['tmp_name'], $uploadDir . $newFileName)) {
-                    $thumbnail_url = 'uploads/covers/' . $newFileName;
+                $uploaded = afak_upload_file($_FILES['thumbnail'], 'covers');
+                if ($uploaded) {
+                    $thumbnail_url = $uploaded;
                 }
             }
         }
