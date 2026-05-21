@@ -24,9 +24,9 @@ WORKDIR /var/www/html
 COPY . .
 
 # Ensure upload directories exist and set correct permissions for Apache (www-data)
-RUN mkdir -p uploads/materials uploads/submissions uploads/payments uploads/avatars uploads/covers \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/uploads
+RUN mkdir -p uploads/materials uploads/submissions uploads/payments uploads/avatars uploads/covers
+
+RUN chown -R www-data:www-data /var/www/html && chmod -R 775 /var/www/html
 
 # Expose port 80 to allow traffic to the web server
 EXPOSE 80

@@ -14,19 +14,33 @@ function formatDuration(int $seconds): string {
 }
 
 
+/**
+ * Generates a full URL path, handling environment differences between Local (WAMP) and Render.
+ */
 function url(string $path): string {
     if (strpos($path, 'http') === 0 || strpos($path, '//') === 0) {
         return $path;
     }
+
+    // 1. Detect if we are running locally (WAMP) or on Render (Production)
+    $isLocal = (strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
     
-    $base = defined('BASE_PATH') ? '/' . trim(BASE_PATH, '/') : '';
+    // 2. Determine base path. Locally it's 'AFAK', on Render it's usually empty
+    if (defined('BASE_PATH')) {
+        $base = BASE_PATH;
+    } else {
+        $base = $isLocal ? 'AFAK' : '';
+    }
+
     $cleanPath = ltrim($path, '/');
     
-    if (strpos($cleanPath, '../') === 0) {
+    // Clean up relative path indicators
+    while (strpos($cleanPath, '../') === 0) {
         $cleanPath = substr($cleanPath, 3);
     }
 
-    return rtrim($base, '/') . '/' . ltrim($cleanPath, '/');
+    $basePart = ($base !== '') ? '/' . trim($base, '/') : '';
+    return $basePart . '/' . $cleanPath;
 }
 
 
