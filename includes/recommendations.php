@@ -110,8 +110,11 @@ function afak_ai_refine_recommendations(array $rankedCourses, array $profile): a
             "response_format" => ["type" => "json_object"]
         ]),
         CURLOPT_TIMEOUT => 10,
-        CURLOPT_SSL_VERIFYPEER => false
     ]);
+
+    if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    }
 
     $response = curl_exec($ch);
     curl_close($ch);

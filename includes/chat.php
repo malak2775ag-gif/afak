@@ -5,6 +5,12 @@ if (file_exists(__DIR__ . '/../config/ai.php')) {
 }
 if (!defined('GROQ_API_KEY')) define('GROQ_API_KEY', getenv('GROQ_API_KEY') ?: '');
 if (!defined('AFAK_AI_CHAT_MODEL')) define('AFAK_AI_CHAT_MODEL', getenv('AFAK_AI_CHAT_MODEL') ?: 'llama-3.3-70b-versatile');
+if (!defined('AFAK_AI_FALLBACK_MODELS')) {
+    define('AFAK_AI_FALLBACK_MODELS', [
+        'llama-3.1-8b-instant',
+        'mixtral-8x7b-32768'
+    ]);
+}
 
 require_once __DIR__ . '/../config/db.php';
 
@@ -17,6 +23,11 @@ $userId = $_SESSION['user_id'] ?? null;
 
 if ($message === '' || !$userId) {
     echo json_encode(['error' => 'Empty message']);
+    exit;
+}
+
+if (GROQ_API_KEY === '') {
+    echo json_encode(['error' => 'AI Service is not configured (Missing API Key)']);
     exit;
 }
 
@@ -66,10 +77,14 @@ function call_groq_chat(string $model, string $message, string $apiKey, string $
             "Content-Type: application/json"
         ],
         CURLOPT_POSTFIELDS     => json_encode($data),
-        CURLOPT_TIMEOUT        => 30,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false
+        CURLOPT_TIMEOUT        => 30
     ]);
+
+    // For local environments (WAMP), we disable verification.
+    // On Render, the system bundle is used automatically.
+    if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    }
 
     $response = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -83,14 +83,22 @@ function afak_gemini_generate(array $messages, string $apiKey): ?string
 function afak_http_post_json(string $url, string $body, array $headers, int $timeout = 45): ?string
 {
     if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
+        $crl_setopt_array($ch, [
             CURLOPT_POST           => true,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_POSTFIELDS     => $body,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => $timeout,
         ]);
+
+        if ($caPath && file_exists($caPath)) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_CAINFO, $caPath);
+        } else {
+            // Fallback for local environments without a CA bundle
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        }
+
         $raw = curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);

@@ -2,13 +2,13 @@
 $configPath = __DIR__ . '/database.php';
 $config = file_exists($configPath) ? require $configPath : [];
 
-// استخدام متغيرات البيئة (لـ Render) أو العودة للإعدادات المحلية (لـ WAMP)
 $host = getenv('DB_HOST') ?: ($config['host'] ?? 'mysql-7402dda-malak2775ag-c295.a.aivencloud.com');
 $port = getenv('DB_PORT') ?: ($config['port'] ?? '24631');
 $dbname = getenv('DB_NAME') ?: ($config['dbname'] ?? 'afakdb');
 $user = getenv('DB_USER') ?: ($config['username'] ?? 'avnadmin');
 $pass = getenv('DB_PASS') ?: ($config['password'] ?? 'AVNS_TsvGVJVAtmU8aio3wGf');
 $charset = getenv('DB_CHARSET') ?: ($config['charset'] ?? 'utf8mb4');
+
 // إعداد خيارات SSL إذا كانت مطلوبة (مهمة للربط مع قواعد البيانات السحابية)
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
