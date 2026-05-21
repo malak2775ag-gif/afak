@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/config/ai.php';
 if (file_exists(__DIR__ . '/config/ai.php')) {
     require_once __DIR__ . '/config/ai.php';
 }
