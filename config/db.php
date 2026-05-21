@@ -1,21 +1,33 @@
 <?php
-$config = require __DIR__ . '/database.php';
+$configPath = __DIR__ . '/database.php';
+$config = file_exists($configPath) ? require $configPath : [];
 
-// Include port in DSN if it exists in config, otherwise default to 3306
+// استخدام متغيرات البيئة (لـ Render) أو العودة للإعدادات المحلية (لـ WAMP)
+$host = getenv('DB_HOST') ?: ($config['host'] ?? '127.0.0.1');
+$port = getenv('DB_PORT') ?: ($config['port'] ?? '3306');
+$dbname = getenv('DB_NAME') ?: ($config['dbname'] ?? 'afakdb');
+$user = getenv('DB_USER') ?: ($config['username'] ?? 'root');
+$pass = getenv('DB_PASS') ?: ($config['password'] ?? '');
+$charset = getenv('DB_CHARSET') ?: ($config['charset'] ?? 'utf8mb4');
+$collation = getenv('DB_COLLATION') ?: ($config['collation'] ?? 'utf8mb4_0900_ai_ci');
+// إعداد خيارات SSL إذا كانت مطلوبة (مهمة للربط مع قواعد البيانات السحابية)
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+];
+
+// إذا كنا في بيئة الإنتاج أو تم تحديد استخدام SSL
+if (getenv('DB_SSL_CA') === 'true' || file_exists(__DIR__ . '/../assets/ca.pem')) {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = __DIR__ . '/../assets/ca.pem';
+}
+
 $dsn = sprintf(
-    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-    /*  'mysql:host=%s;dbname=%s;charset=%s', */
-    $config['host'],
-    $config['port'] ?? '24631',
-    $config['dbname'],
-    $config['charset']
+    'mysql:host=%s;port=%s;dbname=%s;charset=%s;collation=%s',
+    $host, $port, $dbname, $charset, $collation
 );
 
 try {
-    $pdo = new PDO($dsn, $config['username'], $config['password'], [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
+    $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
     die('Database connection failed: ' . $e->getMessage());
 }
