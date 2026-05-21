@@ -9,7 +9,6 @@ $dbname = getenv('DB_NAME') ?: ($config['dbname'] ?? 'afakdb');
 $user = getenv('DB_USER') ?: ($config['username'] ?? 'root');
 $pass = getenv('DB_PASS') ?: ($config['password'] ?? '');
 $charset = getenv('DB_CHARSET') ?: ($config['charset'] ?? 'utf8mb4');
-$collation = getenv('DB_COLLATION') ?: ($config['collation'] ?? 'utf8mb4_0900_ai_ci');
 // إعداد خيارات SSL إذا كانت مطلوبة (مهمة للربط مع قواعد البيانات السحابية)
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -22,8 +21,8 @@ if (getenv('DB_SSL_CA') === 'true' || file_exists(__DIR__ . '/../assets/ca.pem')
 }
 
 $dsn = sprintf(
-    'mysql:host=%s;port=%s;dbname=%s;charset=%s;collation=%s',
-    $host, $port, $dbname, $charset, $collation
+    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+    $host, $port, $dbname, $charset
 );
 
 try {
