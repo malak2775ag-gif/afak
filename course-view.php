@@ -255,7 +255,15 @@ require_once __DIR__ . '/includes/header.php';
                 <?php
                 
                 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-                $fullFileUrl = $protocol . $_SERVER['HTTP_HOST'] . url($currentMaterial['content_url']);
+                $rawUrl = $currentMaterial['content_url'];
+                
+                // If the URL is already absolute (like Cloudinary), use it directly. 
+                // Otherwise, prepend the current domain.
+                if (strpos($rawUrl, 'http') === 0 || strpos($rawUrl, '//') === 0) {
+                    $fullFileUrl = $rawUrl;
+                } else {
+                    $fullFileUrl = $protocol . $_SERVER['HTTP_HOST'] . url($rawUrl);
+                }
                 $isLocalhost = (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
                 ?>
                 <div class="document-viewer-wrap" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fdfdfd;">
