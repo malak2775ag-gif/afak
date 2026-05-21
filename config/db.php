@@ -1,12 +1,14 @@
 <?php
 $config = require __DIR__ . '/database.php';
 
+// Include port in DSN if it exists in config, otherwise default to 3306
 $dsn = sprintf(
-    'mysql:host=%s;dbname=%s;charset=%s',
+    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+    /*  'mysql:host=%s;dbname=%s;charset=%s', */
     $config['host'],
+    $config['port'] ?? '24631',
     $config['dbname'],
     $config['charset']
-    
 );
 
 try {

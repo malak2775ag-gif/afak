@@ -22,6 +22,10 @@ if (!$course) {
     exit;
 }
 
+$pageStylesheets = [
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css'
+];
+
 $pageTitle = 'Edit: ' . $course['title'];
 $flash = getFlash();
 
@@ -107,12 +111,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type = $_POST['material_type'] ?? 'link';
         $content_url = trim($_POST['content_url'] ?? '');
 
+        // Extract URL from H5P iframe code if provided
+        if ($type === 'h5p' && preg_match('/src=["\']([^"\']+)["\']/', $content_url, $matches)) {
+            $content_url = $matches[1];
+        }
+
         // Handle File Upload for non-link types
         if ($type !== 'link' && $type !== 'h5p') {
             if (isset($_FILES['material_file']) && $_FILES['material_file']['name'] !== '') {
                 if ($_FILES['material_file']['error'] !== UPLOAD_ERR_OK) {
+                    $limit = ini_get('upload_max_filesize');
+                    $postLimit = ini_get('post_max_size');
                     $uploadErrors = [
-                        UPLOAD_ERR_INI_SIZE => 'The file is too large (exceeds PHP limit).',
+                        UPLOAD_ERR_INI_SIZE => "The file is too large. Your server limit is currently $limit (post_max_size is $postLimit).",
                         UPLOAD_ERR_FORM_SIZE => 'The file is too large.',
                         UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded.',
                         UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
@@ -169,6 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type = $_POST['material_type'] ?? 'link';
         $content_url = trim($_POST['content_url'] ?? '');
 
+        // Extract URL from H5P iframe code if provided
+        if ($type === 'h5p' && preg_match('/src=["\']([^"\']+)["\']/', $content_url, $matches)) {
+            $content_url = $matches[1];
+        }
+
         // Security check: ensure material belongs to this course
         $stmt = $pdo->prepare("SELECT cm.* FROM course_materials cm JOIN course_units cu ON cm.unit_id = cu.id WHERE cm.id = ? AND cu.course_id = ?");
         $stmt->execute([$matId, $courseId]);
@@ -176,15 +192,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($existing && $title !== '') {
             // Handle File Upload
-            if (isset($_FILES['material_file']) && $_FILES['material_file']['error'] === UPLOAD_ERR_OK) {
+            if (isset($_FILES['material_file']) && $_FILES['material_file']['name'] !== '') {
+                if ($_FILES['material_file']['error'] !== UPLOAD_ERR_OK) {
+                    $limit = ini_get('upload_max_filesize');
+                    $postLimit = ini_get('post_max_size');
+                    $uploadErrors = [
+                        UPLOAD_ERR_INI_SIZE => "The file is too large. Your server limit is currently $limit (post_max_size is $postLimit).",
+                        UPLOAD_ERR_FORM_SIZE => 'The file is too large.',
+                        UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded.',
+                        UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+                        UPLOAD_ERR_NO_TMP_DIR => 'Server missing a temporary folder.',
+                        UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                        UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.',
+                    ];
+                    flash('danger', 'Upload failed: ' . ($uploadErrors[$_FILES['material_file']['error']] ?? 'Unknown error.'));
+                    header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
+                    exit;
+                }
+                
                 $fileTmpPath = $_FILES['material_file']['tmp_name'];
                 $fileName = $_FILES['material_file']['name'];
                 $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
                 $newFileName = uniqid('mat_', true) . '.' . $fileExt;
                 $uploadDir = __DIR__ . '/../uploads/materials/';
+
                 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
                 if (move_uploaded_file($fileTmpPath, $uploadDir . $newFileName)) {
                     $content_url = 'uploads/materials/' . $newFileName;
+                } else {
+                    flash('danger', 'Failed to save the uploaded file.');
+                    header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
+                    exit;
                 }
             } elseif ($type !== 'link' && empty($content_url)) {
                 // If not a link and no new file, keep current content
@@ -240,20 +279,20 @@ function ins_material_icon(string $type): string
 {
     switch ($type) {
         case 'video':
-            return '&#x23F5;';
+            return '<i class="fas fa-video"></i>';
 
         case 'pdf':
-            return 'PDF';
+            return '<i class="fas fa-file-pdf"></i>';
 
         case 'link':
-            return '&#x1F517;';
+            return '<i class="fas fa-link"></i>';
             
         case 'document':
-            return 'Doc';
+            return '<i class="fas fa-file-word"></i>';
         case 'slide':
-            return 'PPT';
+            return '<i class="fas fa-file-powerpoint"></i>';
         case 'h5p':
-            return 'H5P';
+            return '<i class="fas fa-puzzle-piece"></i>'; // Generic icon for interactive content
         default:
             return '•';
     }
@@ -490,7 +529,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                             <div id="material_link_input_group" style="display:none;">
                                 <label>URL or External Link</label>
-                                <input type="text" name="content_url" class="form-control" placeholder="Paste URL or H5P link here...">
+                                <input type="text" name="content_url" class="form-control" placeholder="Paste URL or H5P embed code here...">
                             </div>
                         </div>
                     </div>

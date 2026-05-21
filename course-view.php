@@ -257,9 +257,17 @@ require_once __DIR__ . '/includes/header.php';
                 
                 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
                 $fullFileUrl = $protocol . $_SERVER['HTTP_HOST'] . url($currentMaterial['content_url']);
+                $isLocalhost = (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
                 ?>
                 <div class="document-viewer-wrap" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fdfdfd;">
-                    <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=<?= urlencode($fullFileUrl) ?>" width="100%" height="600" frameborder="0"></iframe>
+                    <?php if ($isLocalhost): ?>
+                        <div style="padding: 2rem; text-align: center; background: #fff3cd; border-bottom: 1px solid #ffeeba; color: #856404;">
+                            <p style="margin: 0; font-weight: 600;">Preview not available on localhost.</p>
+                            <p style="margin: 0.5rem 0 0; font-size: 0.9rem;">The online viewer requires a public internet connection to access the file. Please download it instead.</p>
+                        </div>
+                    <?php else: ?>
+                        <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=<?= urlencode($fullFileUrl) ?>" width="100%" height="600" frameborder="0"></iframe>
+                    <?php endif; ?>
                     
                     <div style="padding: 2rem; text-align: center; border-top: 1px solid var(--border); background: white;">
                         <p style="margin-bottom: 0.5rem;"><strong>Interactive Preview</strong></p>
@@ -276,6 +284,7 @@ require_once __DIR__ . '/includes/header.php';
             <?php elseif ($currentMaterial['type'] === 'h5p'): ?>
                 <div class="h5p-container" style="width: 100%; min-height: 600px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
                     <iframe src="<?= e($currentMaterial['content_url']) ?>" width="100%" height="600" frameborder="0" allowfullscreen="allowfullscreen" allow="geolocation *; microphone *; camera *; midi *; encrypted-media *"></iframe>
+                    <script src="https://h5p.org/sites/all/modules/h5p/library/js/h5p-resizer.js" charset="UTF-8"></script>
                 </div>
             <?php else: ?>
                 <p><a href="<?= e(url($currentMaterial['content_url'])) ?>" target="_blank" class="btn btn-primary">Download / View <?= ucfirst($currentMaterial['type']) ?></a></p>
