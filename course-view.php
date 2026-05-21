@@ -4,7 +4,8 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
 
 session_start();
-requireStudent(); // requireStudent() implicitly calls requireLogin()
+// Allow Admins and Instructors to access this page for previewing content
+requireLogin(); 
 
 $isAdmin = (($_SESSION['role'] ?? '') === 'admin');
 $isInstructor = (($_SESSION['role'] ?? '') === 'instructor');
@@ -34,12 +35,11 @@ if (!$enrollment && !$isAdmin && !$isInstructor) {
     exit;
 }
 // Allow admins and instructors to preview the course without an enrollment record
-if (!$enrollment) {
+if (!$enrollment && ($isAdmin || $isInstructor)) {
     $enrollment = ['id' => 0, 'progress_percent' => 0, 'status' => 'preview'];
 }
 
 $pageTitle = $course['title'];
-$enrollmentId = $enrollment['id'];
 $enrollmentId = (int)$enrollment['id'];
 
 // Units with thematerials
@@ -136,7 +136,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-    <aside class="course-sidebar" style="flex-shrink: 0;">
+    <aside class="course-sidebar" style="flex-shrink: 0; width: 300px;">
         <h3 style="margin-top: 0;"><?= e($course['title']) ?></h3>
         <div class="progress-bar mb-2">
             <div class="progress-bar-fill" style="width: <?= (float)$enrollment['progress_percent'] ?>%"></div>
@@ -249,8 +249,18 @@ require_once __DIR__ . '/includes/header.php';
                     </video>
                 <?php endif; ?>
             <?php elseif ($currentMaterial['type'] === 'pdf'): ?>
-                <iframe src="<?= e(url($currentMaterial['content_url'])) ?>" width="100%" height="600" style="border: none;"></iframe>
-                <p class="mt-1"><a href="<?= e(url($currentMaterial['content_url'])) ?>" download class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;">Download PDF</a></p>
+                <?php
+                $rawUrl = $currentMaterial['content_url'];
+                // Ensure we use an absolute URL for the iframe and download link
+                if (strpos($rawUrl, 'http') === 0 || strpos($rawUrl, '//') === 0) {
+                    $fullPdfUrl = $rawUrl;
+                } else {
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+                    $fullPdfUrl = $protocol . $_SERVER['HTTP_HOST'] . url($rawUrl);
+                }
+                ?>
+                <iframe src="<?= e($fullPdfUrl) ?>" width="100%" height="600" style="border: none;"></iframe>
+                <p class="mt-1"><a href="<?= e($fullPdfUrl) ?>" download class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;">Download PDF</a></p>
             <?php elseif ($currentMaterial['type'] === 'slide' || $currentMaterial['type'] === 'document'): ?>
                 <?php
                 
@@ -300,8 +310,14 @@ require_once __DIR__ . '/includes/header.php';
             <form method="POST" class="mt-2">
                 <button type="submit" name="complete" value="1" class="btn btn-primary">Mark as Complete</button>
             </form>
+        <?php elseif (empty($units)): ?>
+            <div class="alert alert-info">This course does not have any content modules yet. Check back soon!</div>
         <?php else: ?>
-            <p>Select a material from the sidebar to start learning.</p>
+            <div style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+                <i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <h3>Ready to start?</h3>
+                <p>Select a lesson from the curriculum on the left to begin your journey.</p>
+            </div>
         <?php endif ?>
     </div>
 </div>

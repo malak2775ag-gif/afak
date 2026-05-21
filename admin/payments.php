@@ -83,7 +83,7 @@ require_once __DIR__ . '/../includes/header.php';
             <td style="padding: 1rem;">
                 
                 <?php if (!empty($p['proof_file'])): ?>
-                    <a href="<?= url($p['proof_file']) ?> " target="_blank" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.10 rem;color: #087eb0; font-weight: bold;">View Proof</a>
+                    <a href="<?= url($p['proof_file']) ?>" target="_blank" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; color: #087eb0; font-weight: bold;">View Proof</a>
                 <?php else: ?>
                     <span style="color: #dc3545; font-weight: bold;">No file</span>
                 <?php endif; ?>

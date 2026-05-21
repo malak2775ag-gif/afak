@@ -7,12 +7,13 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libzip-dev \
     libicu-dev \
+    libcurl4-openssl-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure and install required PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd zip intl exif
+    && docker-php-ext-install pdo_mysql gd zip intl exif curl
 
 # Enable Apache mod_rewrite for clean URLs (if you use .htaccess)
 RUN a2enmod rewrite

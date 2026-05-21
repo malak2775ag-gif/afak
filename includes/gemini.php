@@ -83,7 +83,9 @@ function afak_gemini_generate(array $messages, string $apiKey): ?string
 function afak_http_post_json(string $url, string $body, array $headers, int $timeout = 45): ?string
 {
     if (function_exists('curl_init')) {
-        $crl_setopt_array($ch, [
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
             CURLOPT_POST           => true,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_POSTFIELDS     => $body,
@@ -91,12 +93,11 @@ function afak_http_post_json(string $url, string $body, array $headers, int $tim
             CURLOPT_TIMEOUT        => $timeout,
         ]);
 
-        if ($caPath && file_exists($caPath)) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_CAINFO, $caPath);
-        } else {
-            // Fallback for local environments without a CA bundle
+        // Disable SSL verification only for local development to avoid certificate errors
+        if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         }
 
         $raw = curl_exec($ch);
