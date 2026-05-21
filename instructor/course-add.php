@@ -53,8 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $baseSlug = $slug;ve coer image.';
-                $errors[] = 'Faild to upload
+        $baseSlug = $slug;
         $n = 0;
         do {
             $trySlug = $n === 0 ? $baseSlug : $baseSlug . '-' . $n;

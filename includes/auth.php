@@ -7,7 +7,7 @@ function isLoggedIn(): bool {
 
 function requireLogin(): void {
     if (!isLoggedIn()) {
-        header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+        header('Location: ' . url('login.php') . '?redirect=' . urlencode($_SERVER['REQUEST_URI']));
         exit;
     }
 }
