@@ -129,16 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 
-                $fileTmpPath = $_FILES['material_file']['tmp_name'];
-                $fileName = $_FILES['material_file']['name'];
-                $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-                $newFileName = uniqid('mat_', true) . '.' . $fileExt;
-                $uploadDir = __DIR__ . '/../uploads/materials/';
-
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-                if (move_uploaded_file($fileTmpPath, $uploadDir . $newFileName)) {
-                    $content_url = 'uploads/materials/' . $newFileName;
+                $uploaded = afak_upload_file($_FILES['material_file'], 'materials');
+                if ($uploaded) {
+                    $content_url = $uploaded;
                 } else {
                     flash('danger', 'Failed to save the uploaded file.');
                     header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
@@ -204,16 +197,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 
-                $fileTmpPath = $_FILES['material_file']['tmp_name'];
-                $fileName = $_FILES['material_file']['name'];
-                $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-                $newFileName = uniqid('mat_', true) . '.' . $fileExt;
-                $uploadDir = __DIR__ . '/../uploads/materials/';
-
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-                if (move_uploaded_file($fileTmpPath, $uploadDir . $newFileName)) {
-                    $content_url = 'uploads/materials/' . $newFileName;
+                $uploaded = afak_upload_file($_FILES['material_file'], 'materials');
+                if ($uploaded) {
+                    $content_url = $uploaded;
                 } else {
                     flash('danger', 'Failed to save the uploaded file.');
                     header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
@@ -519,7 +505,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div id="material_file_upload_group">
                                 <label>Upload file</label>
                                 <input type="file" name="material_file" class="form-control">
-                                <small class="text-muted">Recommended for Video/PDF. Max: 20MB</small>
+                                <small class="text-muted">Recommended for Video/PDF. Max: 100MB</small>
                             </div>
                             <div id="material_link_input_group" style="display:none;">
                                 <label>URL or External Link</label>

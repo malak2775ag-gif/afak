@@ -70,13 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($q['type'] === 'file_upload' && isset($_FILES['q_' . $q['id']])) {
             $file = $_FILES['q_' . $q['id']];
             if ($file['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/uploads/submissions/';
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-                
-                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $fileName = 'sub_' . $_SESSION['user_id'] . '_' . uniqid() . '.' . $ext;
-                if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
-                    $answer = 'uploads/submissions/' . $fileName;
+                $uploaded = afak_upload_file($file, 'submissions');
+                if ($uploaded) {
+                    $answer = $uploaded;
                 }
             }
         } else {

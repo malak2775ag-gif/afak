@@ -17,6 +17,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Enable Apache mod_rewrite for clean URLs (if you use .htaccess)
 RUN a2enmod rewrite
 
+# Increase PHP upload limits to allow larger slides/videos
+RUN echo "upload_max_filesize = 100M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 100M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Set the working directory inside the container
 WORKDIR /var/www/html
 

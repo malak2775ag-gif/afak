@@ -51,14 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Handle File Upload
         $file = $_FILES['payment_proof'];
-        $uploadDir = __DIR__ . '/uploads/payments/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $fileName = 'pay_' . $_SESSION['user_id'] . '_' . uniqid() . '.' . $ext;
-        
-        if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
-            $proof_path = 'uploads/payments/' . $fileName;
+        $uploaded = afak_upload_file($file, 'payments');
+        if ($uploaded) {
+            $proof_path = $uploaded;
             
             // Store with 'pending' status. Note: Table should have 'proof_file' column.
             $pdo->prepare("INSERT INTO payments (student_id, course_id, amount, status, transaction_id, payment_method, proof_file) VALUES (?, ?, ?, 'pending', ?, 'Bank Transfer', ?)")
