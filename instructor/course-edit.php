@@ -505,7 +505,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div id="material_file_upload_group">
                                 <label>Upload file</label>
                                 <input type="file" name="material_file" class="form-control">
-                                <small class="text-muted">Recommended for Video/PDF. Max: 100MB</small>
+                                <small class="text-muted">Recommended for Video/PDF. Max: 20MB</small>
                             </div>
                             <div id="material_link_input_group" style="display:none;">
                                 <label>URL or External Link</label>

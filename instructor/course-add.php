@@ -43,22 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($fileType, $allowedTypes, true)) {
             $errors[] = 'Invalid cover image type. Allowed: JPG, PNG, GIF, WEBP.';
         } else {
-            if ($_FILES['cover']['error'] !== UPLOAD_ERR_OK) {
-                $limit = ini_get('upload_max_filesize');
-                $postLimit = ini_get('post_max_size');
-                $uploadErrors = [
-                    UPLOAD_ERR_INI_SIZE => "The file is too large. Your server limit is currently $limit (post_max_size is $postLimit).",
-                    UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the HTML form configured maximum size.',
-                    UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded.',
-                    UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
-                    UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder for uploads.',
-                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
-                    UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.',
-                ];
-                $errors[] = 'Cover image upload failed: ' . ($uploadErrors[$_FILES['cover']['error']] ?? 'Unknown error.');
-                // Skip further processing of this file if there's an upload error
-                $thumbnail_url = null; 
-            } else {
             $uploaded = afak_upload_file($_FILES['cover'], 'covers');
             if ($uploaded) {
                 $thumbnail_url = $uploaded;
@@ -68,10 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (empt$uploaded = afak_upload_file($_FILES['cover'], 'covers');
-            if ($uploaded) {
-                $thumbnail_url = $uploaded;
-            y($errors)) {
+    if (empty($errors)) {
         $baseSlug = $slug;ve coer image.';
                 $errors[] = 'Faild to upload
         $n = 0;
