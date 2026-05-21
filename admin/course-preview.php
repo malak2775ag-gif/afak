@@ -151,7 +151,16 @@ require_once __DIR__ . '/../includes/header.php';
                         </video>
                     <?php endif; ?>
                 <?php elseif ($type === 'pdf'): ?>
-                    <iframe src="<?= e(url($url)) ?>" width="100%" height="700px" style="border: none;"></iframe>
+                    <?php
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+                    if (strpos($url, 'http') === 0 || strpos($url, '//') === 0) {
+                        $fullPdfUrl = $url;
+                    } else {
+                        $fullPdfUrl = $protocol . $_SERVER['HTTP_HOST'] . url($url);
+                    }
+                    $isLocalhost = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false);
+                    ?>
+                    <iframe src="<?= $isLocalhost ? e($fullPdfUrl) : "https://docs.google.com/gview?embedded=true&url=" . urlencode($fullPdfUrl) ?>" width="100%" height="700px" style="border: none;"></iframe>
                 <?php elseif ($type === 'slide' || $type === 'document'): ?>
                     <?php $fullFileUrl = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://") . $_SERVER['HTTP_HOST'] . url($url); ?>
                     <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=<?= urlencode($fullFileUrl) ?>" width="100%" height="600" frameborder="0"></iframe>

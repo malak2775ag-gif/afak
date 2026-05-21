@@ -249,18 +249,24 @@ require_once __DIR__ . '/includes/header.php';
                     </video>
                 <?php endif; ?>
             <?php elseif ($currentMaterial['type'] === 'pdf'): ?>
-                <?php
+                <?php 
                 $rawUrl = $currentMaterial['content_url'];
-                // Ensure we use an absolute URL for the iframe and download link
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
                 if (strpos($rawUrl, 'http') === 0 || strpos($rawUrl, '//') === 0) {
                     $fullPdfUrl = $rawUrl;
                 } else {
-                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
                     $fullPdfUrl = $protocol . $_SERVER['HTTP_HOST'] . url($rawUrl);
                 }
+                $isLocalhost = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false);
                 ?>
-                <iframe src="<?= e($fullPdfUrl) ?>" width="100%" height="600" style="border: none;"></iframe>
-                <p class="mt-1"><a href="<?= e($fullPdfUrl) ?>" download class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;">Download PDF</a></p>
+                <div class="document-viewer-wrap" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fdfdfd;">
+                    <?php if ($isLocalhost && strpos($fullPdfUrl, 'http://localhost') !== false): ?>
+                        <iframe src="<?= e($fullPdfUrl) ?>" width="100%" height="600" style="border: none;"></iframe>
+                    <?php else: ?>
+                        <iframe src="https://docs.google.com/gview?embedded=true&url=<?= urlencode($fullPdfUrl) ?>" width="100%" height="600" style="border: none;"></iframe>
+                    <?php endif; ?>
+                    <p class="mt-1" style="text-align: center; padding: 10px;"><a href="<?= e($fullPdfUrl) ?>" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;">Open / Download PDF</a></p>
+                </div>
             <?php elseif ($currentMaterial['type'] === 'slide' || $currentMaterial['type'] === 'document'): ?>
                 <?php
                 

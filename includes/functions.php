@@ -145,9 +145,17 @@ function getHierarchicalCategories(PDO $pdo): array {
  * Uses the credentials provided for DAPZYZ2XQ.
  */
 function afak_upload_file(array $file, string $type = 'general'): ?string {
-    $cloudName = getenv('CLOUD_NAME') ?: 'dapzyz2xq';
-    $apiKey = getenv('API_KEY') ?: '382277631725532';
-    $apiSecret = getenv('API_SECRET') ?: 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
+    $cloudinaryUrl = getenv('CLOUDINARY_URL');
+    if ($cloudinaryUrl) {
+        $p = parse_url($cloudinaryUrl);
+        $cloudName = $p['host'] ?? 'dapzyz2xq';
+        $apiKey = $p['user'] ?? '382277631725532';
+        $apiSecret = $p['pass'] ?? 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
+    } else {
+        $cloudName = getenv('CLOUD_NAME') ?: 'dapzyz2xq';
+        $apiKey = getenv('API_KEY') ?: '382277631725532';
+        $apiSecret = getenv('API_SECRET') ?: 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
+    }
 
     // Detect environment
     $isLocal = (strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
