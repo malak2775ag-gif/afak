@@ -1,5 +1,11 @@
 <?php
 require_once __DIR__ . '/config/ai.php';
+if (file_exists(__DIR__ . '/config/ai.php')) {
+    require_once __DIR__ . '/config/ai.php';
+}
+if (!defined('GROQ_API_KEY')) define('GROQ_API_KEY', getenv('GROQ_API_KEY') ?: '');
+if (!defined('AFAK_AI_CHAT_MODEL')) define('AFAK_AI_CHAT_MODEL', getenv('AFAK_AI_CHAT_MODEL') ?: 'llama-3.3-70b-versatile');
+
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';

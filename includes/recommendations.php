@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../config/ai.php';
+
+// Load local AI config if exists, otherwise rely on environment variables
+if (file_exists(__DIR__ . '/../config/ai.php')) {
+    require_once __DIR__ . '/../config/ai.php';
+}
+if (!defined('GROQ_API_KEY')) define('GROQ_API_KEY', getenv('GROQ_API_KEY') ?: '');
+if (!defined('AFAK_AI_CHAT_MODEL')) define('AFAK_AI_CHAT_MODEL', getenv('AFAK_AI_CHAT_MODEL') ?: 'llama-3.3-70b-versatile');
 
 function afak_ensure_learning_profiles_table(PDO $pdo): void
 {
