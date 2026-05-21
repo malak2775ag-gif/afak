@@ -4,10 +4,10 @@ $config = file_exists($configPath) ? require $configPath : [];
 
 // استخدام متغيرات البيئة (لـ Render) أو العودة للإعدادات المحلية (لـ WAMP)
 $host = getenv('DB_HOST') ?: ($config['host'] ?? '127.0.0.1');
-$port = getenv('DB_PORT') ?: ($config['port'] ?? '3306');
+$port = getenv('DB_PORT') ?: ($config['port'] ?? '24631');
 $dbname = getenv('DB_NAME') ?: ($config['dbname'] ?? 'afakdb');
-$user = getenv('DB_USER') ?: ($config['username'] ?? 'root');
-$pass = getenv('DB_PASS') ?: ($config['password'] ?? '');
+$user = getenv('DB_USER') ?: ($config['username'] ?? 'avnadmin');
+$pass = getenv('DB_PASS') ?: ($config['password'] ?? 'AVNS_TsvGVJVAtmU8aio3wGf');
 $charset = getenv('DB_CHARSET') ?: ($config['charset'] ?? 'utf8mb4');
 // إعداد خيارات SSL إذا كانت مطلوبة (مهمة للربط مع قواعد البيانات السحابية)
 $options = [
@@ -28,5 +28,5 @@ $dsn = sprintf(
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (PDOException $e) {
-    die('Database connection failed: ' . $e->getMessage());
+    die("Database connection failed for host '{$host}': " . $e->getMessage());
 }
