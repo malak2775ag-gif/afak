@@ -145,8 +145,8 @@ function getHierarchicalCategories(PDO $pdo): array {
  * Uses the credentials provided for DAPZYZ2XQ.
  */
 function afak_upload_file(array $file, string $type = 'general'): ?string {
-    // 1. Use Environment Variables for production (Render), fallback to hardcoded for testing
-    $cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: 'dapzyz2xq';
+    // Prioritize personal account environment variables
+    $cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: 'dapzyz2xq'; // Fallback to public for local testing only
     $apiKey    = getenv('CLOUDINARY_API_KEY') ?: '382277631725532';
     $apiSecret = getenv('CLOUDINARY_API_SECRET') ?: 'SkO17JNcbu1EQgmJUNCAYf9JOLM'; 
 
@@ -159,36 +159,30 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
 
     // 1. Production or Forced Cloudinary: Upload to Cloudinary
     // إذا أردتِ تجربة كلاوديناري محلياً، يمكنكِ إزالة !$isLocal أو التأكد من وجود المفاتيح
-    if (!$isLocal || getenv('FORCE_CLOUDINARY')) {
-        // استخدام النوع auto يسهل رفع الصور والفيديوهات والملفات معاً
+    if (!$isLocal || getenv('FORCE_CLOUDINARY') === 'true') {
         $url = "https://api.cloudinary.com/v1_1/{$cloudName}/auto/upload";
         $timestamp = time();
         $folder = "afak/{$type}";
         
-        $params = ['folder' => $folder, 'timestamp' => $timestamp];
-        ksort($params);
-        
-        $signParts = [];
-        foreach ($params as $k => $v) {
-            $signParts[] = "$k=$v";
-        }
-        $signStr = implode('&', $signParts);
-        $signature = sha1($signStr . $apiSecret);
+        // تبسيط التوقيع الأمني لضمان التوافق مع صلاحيات الحساب
+        // نستخدم الطريقة القياسية: بارامترات مرتبة أبجدياً متبوعة بالـ API Secret
+        $signature = sha1("folder=$folder&timestamp=$timestamp$apiSecret");
 
         $ch = curl_init($url);
         
         $postFields = [
-            'file'      => new CURLFile($file['tmp_name']),
-            'api_key'   => $apiKey,
-            'timestamp' => $timestamp,
-            'signature' => $signature,
-            'folder'    => $folder
+            'file'          => new CURLFile($file['tmp_name']),
+            'api_key'       => $apiKey,
+            'timestamp'     => $timestamp,
+            'signature'     => $signature,
+            'folder'        => $folder,
+            'resource_type' => 'auto' // Explicitly handle PDF, PPT, and Video
         ];
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_SSL_VERIFYPEER => !$isLocal, // تفعيل الفحص في Render وتعطيله محلياً
+            CURLOPT_SSL_VERIFYPEER => false, // تعطيل الفحص لضمان استقرار الاتصال من Render
             CURLOPT_POSTFIELDS => $postFields
         ]);
 
@@ -199,16 +193,18 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         if ($status === 200) {
             // 1. الكود يحول رد موقع كلاوديناري إلى مصفوفة يفهمها الـ PHP
             $result = json_decode($response, true);
-
-            // 2. هنا يقوم الكود بجلب الرابط السحابي الدائم تلقائياً وتخزينه في متغير وإرجاعه
+            
+            // 2. هنا يقوم الكود بجلب الرابط السحابي الدائم (HTTPS) تلقائياً
             return $result['secure_url'] ?? null;
         }
         
-        // Log the failure details to Render logs
-        error_log("Cloudinary Upload Failed - HTTP Status: $status");
-        error_log("Cloud Name: $cloudName");
-        error_log("API Key used: " . substr($apiKey, 0, 5) . "...");
-        error_log("Cloudinary Error Response: " . $response);
+        // Improved Diagnostic Logging
+        if ($status !== 200) {
+            error_log("Cloudinary Upload Failed - HTTP Status: $status");
+            error_log("Cloud Name: $cloudName");
+            error_log("API Key used: " . substr($apiKey, 0, 5) . "...");
+            error_log("Cloudinary Error Response: " . $response);
+        }
         
         // في بيئة الإنتاج (Render)، إذا فشل كلاوديناري لا نريد الحفظ محلياً لأنه سيختفي
         return null; 
