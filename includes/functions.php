@@ -181,7 +181,8 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
                 'api_key' => $apiKey,
                 'timestamp' => $timestamp,
                 'signature' => $signature,
-                'folder' => $folder
+                'folder' => $folder,
+                'resource_type' => 'auto' // ضروري لضمان رفع كافة أنواع الملفات (PDF, Video, etc.)
             ]
         ]);
         $response = curl_exec($ch);
@@ -189,10 +190,11 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         curl_close($ch);
 
         if ($status === 200) {
+            // 1. الكود يحول رد موقع كلاوديناري إلى مصفوفة يفهمها الـ PHP
             $result = json_decode($response, true);
-            if (isset($result['secure_url'])) {
-                return $result['secure_url'];
-            }
+
+            // 2. هنا يقوم الكود بجلب الرابط السحابي الدائم تلقائياً وتخزينه في متغير وإرجاعه
+            return $result['secure_url'] ?? null;
         }
         
         // طباعة الخطأ إذا حدث مجدداً لمراقبته
