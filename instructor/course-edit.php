@@ -75,6 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $uploaded = afak_upload_file($_FILES['thumbnail'], 'covers');
                 if ($uploaded) {
                     $thumbnail_url = $uploaded;
+                } else {
+                    flash('danger', 'Cloudinary upload failed for the cover image. Please check your API credentials.');
                 }
             }
         }

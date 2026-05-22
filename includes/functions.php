@@ -164,8 +164,9 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
                 || strpos($host, '::1') !== false
                 || empty($host));
 
-    // 1. Production: Upload to Cloudinary
-    if (!$isLocal) {
+    // 1. Production or Forced Cloudinary: Upload to Cloudinary
+    // إذا أردتِ تجربة كلاوديناري محلياً، يمكنكِ إزالة !$isLocal أو التأكد من وجود المفاتيح
+    if (!$isLocal || getenv('FORCE_CLOUDINARY') === 'true') {
         $url = "https://api.cloudinary.com/v1_1/{$cloudName}/auto/upload";
         $timestamp = time();
         $folder = "afak/{$type}";
@@ -177,11 +178,11 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         $signature = sha1(rtrim($signStr, "&") . $apiSecret);
 
         $ch = curl_init($url);
-        // تجاوز فحص SSL في البيئة المحلية لتجنب فشل الاتصال بكلاوديناري
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_SSL_VERIFYPEER => (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') === false),
+            // تعطيل فحص SSL بشكل مؤقت لضمان وصول الطلب في حال وجود مشكلة في إعدادات السيرفر
+            CURLOPT_SSL_VERIFYPEER => false, 
             CURLOPT_POSTFIELDS => [
                 'file' => new CURLFile($file['tmp_name']),
                 'api_key' => $apiKey,
@@ -197,9 +198,13 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         if ($status === 200) {
             // 1. يحول رد موقع كلاوديناري إلى مصفوفة يفهمها الـ PHP
             $result = json_decode($response, true);
-            // 2. هنا يقوم الكود بجلب الرابط السحابي الدائم تلقائياً
-            return $result['secure_url'] ?? null;
+            if (isset($result['secure_url'])) {
+                return $result['secure_url'];
+            }
         }
+        
+        // طباعة الخطأ في سجلات Render للمساعدة في التشخيص
+        error_log("Cloudinary Error Response: " . $response);
         
         // في بيئة الإنتاج (Render)، إذا فشل كلاوديناري لا نريد الحفظ محلياً لأنه سيختفي
         return null; 
