@@ -158,7 +158,11 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
     }
 
     // Detect environment
-    $isLocal = (strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $isLocal = (strpos($host, '127.0.0.1') !== false 
+                || strpos($host, 'localhost') !== false 
+                || strpos($host, '::1') !== false
+                || empty($host));
 
     // 1. Production: Upload to Cloudinary
     if (!$isLocal) {
@@ -173,9 +177,11 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         $signature = sha1(rtrim($signStr, "&") . $apiSecret);
 
         $ch = curl_init($url);
+        // تجاوز فحص SSL في البيئة المحلية لتجنب فشل الاتصال بكلاوديناري
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
+            CURLOPT_SSL_VERIFYPEER => (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') === false),
             CURLOPT_POSTFIELDS => [
                 'file' => new CURLFile($file['tmp_name']),
                 'api_key' => $apiKey,
@@ -199,13 +205,17 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         return null; 
     }
 
-    // 2. Development/Local: Save to local WAMP folder (Only if isLocal is true)
+    // 2. Development/Local: Save to local WAMP folder
     $subDir = "uploads/{$type}/";
-    $uploadDir = __DIR__ . '/../' . $subDir;
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    // استخدام rtrim و ltrim لضمان مسار نظيف
+    $uploadDir = rtrim(dirname(__DIR__), '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $subDir);
+
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $newName = uniqid($type . '_', true) . '.' . $ext;
+    $newName = $type . '_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
     if (move_uploaded_file($file['tmp_name'], $uploadDir . $newName)) {
         return $subDir . $newName;
     }

@@ -31,7 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileTmpPath = $_FILES['avatar']['tmp_name'];
         $fileName = $_FILES['avatar']['name'];
         $fileType = $_FILES['avatar']['type'];
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        
+        // إضافة أنواع MIME إضافية لضمان التوافق مع جميع المتصفحات
+        $allowedTypes = [
+            'image/jpeg', 
+            'image/jpg', 
+            'image/pjpeg', 
+            'image/png', 
+            'image/x-png', 
+            'image/gif', 
+            'image/webp'
+        ];
         
         if (in_array($fileType, $allowedTypes)) {
             $uploaded = afak_upload_file($_FILES['avatar'], 'avatars');
