@@ -383,9 +383,12 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="form-group full-span">
                             <label>Cover image</label>
-                            <?php if (!empty($course['thumbnail_url'])): ?>
-                                <p class="text-muted" style="margin:0 0 0.5rem;font-size:0.875rem;">Current file: <?= e(basename($course['thumbnail_url'])) ?></p>
-                            <?php endif ?>
+                            <?php if (!empty($course['thumbnail_url'])): 
+                                $isUrl = (strpos($course['thumbnail_url'], 'http') === 0);
+                                $displayName = $isUrl ? 'Cloudinary Image (Active)' : basename($course['thumbnail_url']);
+                            ?>
+                                <p class="text-muted" style="margin:0 0 0.5rem;font-size:0.875rem;">Current: <?= e($displayName) ?></p>
+                            <?php endif; ?>
                             <input type="file" name="thumbnail" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control">
                         </div>
                     </div>

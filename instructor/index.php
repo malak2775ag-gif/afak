@@ -104,12 +104,11 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="course-grid">
                 <?php foreach ($courses as $c): ?>
                     <?php
-                        $serverPath = __DIR__ . '/../' . $c['thumbnail_url'];
-                        if (!empty($c['thumbnail_url']) && file_exists($serverPath)) {
-                            $coverImage = url($c['thumbnail_url']);
-                        } else {
-                            $coverImage = url('assets/img/cover1.png'); 
-                        }
+                        $thumb = $c['thumbnail_url'] ?? '';
+                        // التحقق من الرابط سواء كان سحابياً أو محلياً
+                        $coverImage = (!empty($thumb) && (strpos($thumb, 'http') === 0 || file_exists(__DIR__ . '/../' . $thumb))) 
+                                      ? url($thumb) 
+                                      : url('assets/img/cover1.png');
                     ?>
                 <div class="course-card">
                         <div class="course-card-image">

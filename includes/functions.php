@@ -161,7 +161,7 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
     $isLocal = (strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
 
     // 1. Production: Upload to Cloudinary
-    if (!$isLocal && $cloudName && $apiKey && $apiSecret) {
+    if (!$isLocal) {
         $url = "https://api.cloudinary.com/v1_1/{$cloudName}/auto/upload";
         $timestamp = time();
         $folder = "afak/{$type}";
@@ -189,12 +189,17 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         curl_close($ch);
 
         if ($status === 200) {
-            $data = json_decode($response, true);
-            return $data['secure_url'] ?? null;
+            // 1. يحول رد موقع كلاوديناري إلى مصفوفة يفهمها الـ PHP
+            $result = json_decode($response, true);
+            // 2. هنا يقوم الكود بجلب الرابط السحابي الدائم تلقائياً
+            return $result['secure_url'] ?? null;
         }
+        
+        // في بيئة الإنتاج (Render)، إذا فشل كلاوديناري لا نريد الحفظ محلياً لأنه سيختفي
+        return null; 
     }
 
-    // 2. Development/Local: Save to local WAMP folder
+    // 2. Development/Local: Save to local WAMP folder (Only if isLocal is true)
     $subDir = "uploads/{$type}/";
     $uploadDir = __DIR__ . '/../' . $subDir;
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);

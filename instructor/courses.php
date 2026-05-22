@@ -46,12 +46,11 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="ins-course-grid">
             <?php foreach ($courses as $c): ?>
                 <?php
-                $serverPath = __DIR__ . '/../' . ($c['thumbnail_url'] ?? '');
-                if (!empty($c['thumbnail_url']) && file_exists($serverPath)) {
-                    $img = url($c['thumbnail_url']);
-                } else {
-                    $img = url('assets/img/cover1.png');
-                }
+                $thumb = $c['thumbnail_url'] ?? '';
+                // إذا كان الرابط يبدأ بـ http فهذا يعني أنه من كلاوديناري، وإلا نبحث عنه محلياً
+                $img = (!empty($thumb) && (strpos($thumb, 'http') === 0 || file_exists(__DIR__ . '/../' . $thumb))) 
+                       ? url($thumb) 
+                       : url('assets/img/cover1.png');
                 $badge = 'ins-badge-' . preg_replace('/[^a-z0-9_]/', '', $c['status']);
                 ?>
                 <div class="ins-course-card" style="cursor:default;">
