@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($uploaded) {
                     $content_url = $uploaded;
                 } else {
-                    flash('danger', 'Failed to save the uploaded file.');
+                    flash('danger', 'Cloudinary upload failed for the lesson file. Please check Render server logs.');
                     header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
                     exit;
                 }
@@ -203,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($uploaded) {
                     $content_url = $uploaded;
                 } else {
-                    flash('danger', 'Failed to save the uploaded file.');
+                    flash('danger', 'Cloudinary upload failed during the update. Please check Render server logs.');
                     header('Location: ' . url('instructor/course-edit.php?id=' . $courseId));
                     exit;
                 }

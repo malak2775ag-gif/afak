@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($uploaded) {
                 $thumbnail_url = $uploaded;
             } else {
-                $errors[] = 'Failed to upload cover image.';
+                $errors[] = 'Cloudinary upload failed for the cover image. Please check Render server logs.';
             }
         }
     }
