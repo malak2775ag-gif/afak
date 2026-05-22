@@ -27,33 +27,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // avatar upload
-    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['avatar']['tmp_name'];
-        $fileName = $_FILES['avatar']['name'];
-        $fileType = $_FILES['avatar']['type'];
-        
-        // إضافة أنواع MIME إضافية لضمان التوافق مع جميع المتصفحات
-        $allowedTypes = [
-            'image/jpeg', 
-            'image/jpg', 
-            'image/pjpeg', 
-            'image/png', 
-            'image/x-png', 
-            'image/gif', 
-            'image/webp'
-        ];
-        
-        if (in_array($fileType, $allowedTypes)) {
-            $uploaded = afak_upload_file($_FILES['avatar'], 'avatars');
-            if ($uploaded) {
-                $avatarUrl = $uploaded;
-                $pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?")->execute([$avatarUrl, $_SESSION['user_id']]);
-                $user['avatar_url'] = $avatarUrl; // Update for current view
-            } else {
-                $errors[] = 'Failed to upload avatar.';
-            }
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['name'] !== '') {
+        if ($_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+            $limit = ini_get('upload_max_filesize');
+            $postLimit = ini_get('post_max_size');
+            $uploadErrors = [
+                UPLOAD_ERR_INI_SIZE   => "The avatar file is too large. Server limit: $limit.",
+                UPLOAD_ERR_FORM_SIZE  => 'The avatar file is too large.',
+                UPLOAD_ERR_PARTIAL    => 'The avatar file was only partially uploaded.',
+                UPLOAD_ERR_NO_FILE    => 'No avatar file was selected.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Server error: Missing temporary folder. Check your php.ini settings.',
+                UPLOAD_ERR_CANT_WRITE => 'Server error: Failed to write to disk.',
+                UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the upload.',
+            ];
+            $errors[] = $uploadErrors[$_FILES['avatar']['error']] ?? 'Unknown upload error.';
         } else {
-            $errors[] = 'Invalid image type. Allowed: JPG, PNG, GIF, WEBP.';
+            $fileType = $_FILES['avatar']['type'];
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/gif', 'image/webp'];
+            
+            if (in_array($fileType, $allowedMimes)) {
+                $uploaded = afak_upload_file($_FILES['avatar'], 'avatars');
+                if ($uploaded) {
+                    $avatarUrl = $uploaded;
+                    $pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?")->execute([$avatarUrl, $_SESSION['user_id']]);
+                    $user['avatar_url'] = $avatarUrl;
+                } else {
+                    $errors[] = 'Failed to save avatar. Please check folder permissions.';
+                }
+            } else {
+                $errors[] = 'Invalid file type. Please upload an image (JPG, PNG, WEBP).';
+            }
         }
     }
 
