@@ -145,17 +145,10 @@ function getHierarchicalCategories(PDO $pdo): array {
  * Uses the credentials provided for DAPZYZ2XQ.
  */
 function afak_upload_file(array $file, string $type = 'general'): ?string {
-    $cloudinaryUrl = getenv('CLOUDINARY_URL');
-    if ($cloudinaryUrl) {
-        $p = parse_url($cloudinaryUrl);
-        $cloudName = $p['host'] ?? 'dapzyz2xq';
-        $apiKey = $p['user'] ?? '382277631725532';
-        $apiSecret = $p['pass'] ?? 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
-    } else {
-        $cloudName = getenv('CLOUD_NAME') ?: 'dapzyz2xq';
-        $apiKey = getenv('API_KEY') ?: '382277631725532';
-        $apiSecret = getenv('API_SECRET') ?: 'SkO17JNcbu1EQgmJUNCAYf9JOLM';
-    }
+    // 1. تثبيت المفاتيح الصحيحة لحسابك بشكل مباشر لتجنب مشاكل قراءة السيرفر
+    $cloudName = 'dapzyz2xq';
+    $apiKey    = '382277631725532';
+    $apiSecret = 'SkO17JNcbu1EQgmJUNCAYf9JOLM'; 
 
     // Detect environment
     $host = $_SERVER['HTTP_HOST'] ?? '';
@@ -167,6 +160,7 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
     // 1. Production or Forced Cloudinary: Upload to Cloudinary
     // إذا أردتِ تجربة كلاوديناري محلياً، يمكنكِ إزالة !$isLocal أو التأكد من وجود المفاتيح
     if (!$isLocal || getenv('FORCE_CLOUDINARY') === 'true') {
+        // استخدام النوع auto يسهل رفع الصور والفيديوهات والملفات معاً
         $url = "https://api.cloudinary.com/v1_1/{$cloudName}/auto/upload";
         $timestamp = time();
         $folder = "afak/{$type}";
@@ -181,8 +175,7 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            // تعطيل فحص SSL بشكل مؤقت لضمان وصول الطلب في حال وجود مشكلة في إعدادات السيرفر
-            CURLOPT_SSL_VERIFYPEER => false, 
+            CURLOPT_SSL_VERIFYPEER => !$isLocal, // تفعيل الفحص في Render وتعطيله محلياً
             CURLOPT_POSTFIELDS => [
                 'file' => new CURLFile($file['tmp_name']),
                 'api_key' => $apiKey,
@@ -196,14 +189,13 @@ function afak_upload_file(array $file, string $type = 'general'): ?string {
         curl_close($ch);
 
         if ($status === 200) {
-            // 1. يحول رد موقع كلاوديناري إلى مصفوفة يفهمها الـ PHP
             $result = json_decode($response, true);
             if (isset($result['secure_url'])) {
                 return $result['secure_url'];
             }
         }
         
-        // طباعة الخطأ في سجلات Render للمساعدة في التشخيص
+        // طباعة الخطأ إذا حدث مجدداً لمراقبته
         error_log("Cloudinary Error Response: " . $response);
         
         // في بيئة الإنتاج (Render)، إذا فشل كلاوديناري لا نريد الحفظ محلياً لأنه سيختفي

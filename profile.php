@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare("UPDATE users SET avatar_url = ? WHERE id = ?")->execute([$avatarUrl, $_SESSION['user_id']]);
                     $user['avatar_url'] = $avatarUrl;
                 } else {
+                    $errors[] = 'Failed to save avatar. Please check folder permissions.';
                     $errors[] = 'Cloudinary upload failed for the avatar. Please check Render server logs.';
                 }
             } else {
